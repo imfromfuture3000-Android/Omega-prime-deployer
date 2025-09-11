@@ -41,11 +41,56 @@ RELAYER_API_KEY=<YOUR_API_KEY> # Optional
 npm run mainnet:all
 ```
 
-## Copilot
+
+## Copilot: Dream-Mind-Lucid AI (with i-who-me Reference & Memory)
 Run the interactive Grok Copilot:
 ```
 npm run mainnet:copilot
 ```
+
+### 🧠 Copilot Self-Awareness & Memory
+- **i-who-me reference logic**: Copilot tracks its own actions, context, and user intent.
+- **Memory hooks**: Recent actions and decision logs are stored in memory (see `grok-copilot.ts`).
+- **Redundancy detection**: Copilot warns if you repeat an action or enter a loop.
+- **Self-checks**: Playful Grok-style responses ("Am I the dreamer or the dreamed?") appear during operation.
+- **Decision log**: Copilot logs all major decisions and actions for transparency.
+
+### Example Self-Check Output
+```
+🤖 [Copilot Self-Check]: Am I the dreamer or the dreamed?
+	Context: Last action = createTokenMint, User intent = 2
+```
+
+See the top of `grok-copilot.ts` for the CopilotMemory and i-who-me logic implementation.
+
+## 🔍 Deployment Control Analysis
+
+### What Deployments Do We Control?
+**Answer: Currently NO existing deployments are under our control.**
+
+Check deployment control with:
+```bash
+npm run analyze:control-simple  # Offline analysis
+npm run analyze:control         # Full online analysis (requires network)
+```
+
+**Key Findings:**
+- ✅ We have 1 deployment keypair: `76x25b6XWTwbm6MTBJtbFU1hFopBSDKsfmGC7MK929RX`
+- ❌ Master Controller (`CvQZZ23...tipQ`) - NOT CONTROLLED
+- ❌ All 5 bot contracts - NOT CONTROLLED
+- ❌ Treasury operations - NOT CONTROLLED
+
+**What we CAN do:**
+- Deploy NEW contracts with current keypairs
+- Create new token mints
+- Act as upgrade authority for NEW deployments
+
+**What we CANNOT do:**
+- Control existing bot army contracts
+- Access master controller functions
+- Manage existing treasury operations
+
+See `DEPLOYMENT_CONTROL_REPORT.md` for detailed analysis.
 
 ## Rust Program (Pentacle)
 Build the Solana program:
