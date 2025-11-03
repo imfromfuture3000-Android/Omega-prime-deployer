@@ -1,0 +1,121 @@
+name: Mainnet Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: 'Network'
+        required: true
+        default: 'mainnet-beta'
+        type: choice
+        options:
+        - mainnet-beta
+        - devnet
+      confirm:
+        description: 'Confirm deployment'
+        required: true
+        type: boolean
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.confirm }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: token/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd token
+        npm ci
+    
+    - name: Generate deployer keypair
+      run: |
+        cd token
+        node -e "
+        const { Keypair } = require('@solana/web3.js');
+        const fs = require('fs');
+        const kp = Keypair.generate();
+        if (!fs.existsSync('.cache')) fs.mkdirSync('.cache');
+        fs.writeFileSync('.cache/deployer.json', JSON.stringify(Array.from(kp.secretKey)));
+        console.log('Deployer:', kp.publicKey.toBase58());
+        "
+    
+    - name: Deploy to Mainnet
+      env:
+        HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
+        NETWORK: ${{ inputs.network }}
+      run: |
+        cd token
+        node -e "
+        const { Connection, Keypair } = require('@solana/web3.js');
+        const { createMint, TOKEN_2022_PROGRAM_ID } = require('@solana/spl-token');
+        const fs = require('fs');
+        
+        async function deploy() {
+          const conn = new Connection('https://mainnet.helius-rpc.com/?api-key=' + process.env.HELIUS_API_KEY);
+          const keyData = JSON.parse(fs.readFileSync('.cache/deployer.json'));
+          const deployer = Keypair.fromSecretKey(new Uint8Array(keyData));
+          const mint = Keypair.generate();
+          
+          console.log('Deployer:', deployer.publicKey.toBase58());
+          console.log('Mint:', mint.publicKey.toBase58());
+          
+          try {
+            const sig = await createMint(conn, deployer, deployer.publicKey, deployer.publicKey, 9, mint, undefined, TOKEN_2022_PROGRAM_ID);
+            console.log('✅ Success:', sig);
+            
+            const result = {
+              timestamp: new Date().toISOString(),
+              deployer: deployer.publicKey.toBase58(),
+              mint: mint.publicKey.toBase58(),
+              signature: sig,
+              network: process.env.NETWORK,
+              explorer: 'https://explorer.solana.com/tx/' + sig
+            };
+            
+            fs.writeFileSync('.cache/deployment-result.json', JSON.stringify(result, null, 2));
+          } catch (e) {
+            console.error('❌ Error:', e.message);
+            process.exit(1);
+          }
+        }
+        
+        deploy();
+        "
+    
+    - name: Upload deployment artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-${{ github.run_number }}
+        path: |
+          token/.cache/deployment-result.json
+          token/.cache/deployer.json
+    
+    - name: Create deployment summary
+      run: |
+        cd token
+        if [ -f .cache/deployment-result.json ]; then
+          echo "## 🚀 Deployment Success" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Network:** ${{ inputs.network }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          DEPLOYER=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.cache/deployment-result.json')).deployer)")
+          MINT=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.cache/deployment-result.json')).mint)")
+          SIG=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.cache/deployment-result.json')).signature)")
+          
+          echo "**Deployer:** \`$DEPLOYER\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Mint:** \`$MINT\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Signature:** \`$SIG\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [View on Explorer](https://explorer.solana.com/tx/$SIG)" >> $GITHUB_STEP_SUMMARY
+        fi

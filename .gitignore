@@ -1,0 +1,41 @@
+# Security - Sensitive Data
+.env
+.env.*
+.env.secure
+*.key
+*.pem
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!hardhat.config.json
+!pyproject.toml
+secrets/
+.cache/
+test_client.py
+
+# Wallet & Keys
+**/.cache/
+**/new-authority.json
+**/mint-keypair.json
+**/wallet.json
+**/deployer.json
+
+# Dependencies
+node_modules/
+target/
+.anchor/
+
+# Build outputs
+artifacts/
+cache/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
