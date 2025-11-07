@@ -16,17 +16,18 @@
     "security": "npm audit && slither ."
   },
   "dependencies": {
-    "@solana/web3.js": "^1.87.6",
     "@coral-xyz/anchor": "^0.29.0",
-    "@openzeppelin/contracts": "^5.0.1",
-    "hardhat": "^2.19.4",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "dotenv": "^16.3.1"
+    "@openzeppelin/contracts": "^5.0.1",
+    "@solana/web3.js": "^1.87.6",
+    "@types/minimatch": "^6.0.0",
+    "dotenv": "^16.3.1",
+    "hardhat": "^2.19.4"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",
-    "typescript": "^5.3.3",
+    "chai": "^4.3.10",
     "mocha": "^10.2.0",
-    "chai": "^4.3.10"
+    "typescript": "^5.3.3"
   }
 }
